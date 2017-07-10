@@ -1,4 +1,4 @@
-""" Setup File
+""" Configuration File
 
 """
 
@@ -10,6 +10,7 @@ import datetime
 #import config
 import ConfigParser #config parser for storing local settings
 import sys
+import os
 import io
 import telepot
 from telepot.loop import MessageLoop
@@ -20,15 +21,16 @@ config
 
 """ INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
 
-""" FIX PATHING ISSUES """
+this_dir, this_filename = os.path.split(__file__)
+CONFIG_PATH = os.path.join(this_dir, "config.conf")
 
-config.read("config.ini") #read config file
+config.read(CONFIG_PATH) #read config file
 config.sections() #getting sections
 
-print "Config File Contains:" 
+print "Config File Contains: " 
 print config.sections() #print sections for debug
 
-# Helper function ConfigSectionMap to write a dictionary config_dict1 from config.ini into python
+# Helper function ConfigSectionMap to write a dictionary config_dict1 from config.conf into python
 
 def ConfigSectionMap(section):
     config_dict1 = {}
@@ -62,7 +64,7 @@ def telegram_token_configuration():
         return True #telling us that telegram is configured
     else:
         print 'Telegram Token is not defined'
-        telegram_token = raw_input("Please enter your Telegram Token")
+        telegram_token = raw_input("Please enter your Telegram Token: ")
         cfgfile = open("config.ini",'w')
         #config.add_section('Telegram')
         config.set('Telegram','token',telegram_token)
@@ -71,36 +73,11 @@ def telegram_token_configuration():
         cfgfile.close()
         
 # Helper Function to listen to command /register, this will return the chat ID and store it in the config file
-
-""" FIX THIS SHIT """
         
-def get_chatid(msg):
-    telegram_chat_id = msg['chat']['id']
+def handle(msg):
     command = msg['text']
-    telegram_bot = telepot.Bot(telegram_token)
-
-    print 'Got command: %s' % command
-
-    if command == '/register':
-        telegram_bot.sendMessage(telegram_chat_id, "Successfully Registered")
-        print "Chat ID is %s" % telegram_chat_id
-        #print msg
-        cfgfile = open("config.ini",'w')
-        #config.add_section('Telegram')
-        config.set('Telegram','chatid',telegram_chat_id)
-        #Config.set('Person','Age', 50)
-        config.write(cfgfile)
-        cfgfile.close()
-        #get_chatid_status = True
-        return True
+    return command
     
-    elif command != '/register':
-        telegram_bot.sendMessage(telegram_chat_id, "Not registered")
-        #get_chatid_status = False
-        return False
-    else:
-        #get_chatid_status = False
-        return False        
 
 # main function to check if there is a chatID
 
@@ -112,20 +89,17 @@ def telegram_chatid_configuration():
         return True
     else:
         print "ChatID is not set"
-        MessageLoop(telegram_bot, get_chatid).run_as_thread()
-        print('Type /register to your Telegram Bot. I am listening for 10 seconds')
-        time.sleep(10)
-        print "Time is up"
+        return False
+
 
 telegram_token_configuration()
-telegram_chatid_configuration()
-
-""" Check if Chat ID Config worked or not
-if telegram_chatid_configuration() != True:
-    print "retry"
-    telegram_chatid_configuration()
-    
-    """
-    
-
+if telegram_chatid_configuration() == False:
+    #MessageLoop(telegram_bot, get_chatid).run_as_thread()
+    telegram_bot = telepot.Bot(telegram_token)
+    print('Type /register to your Telegram Bot. I am listening for 20 seconds')
+    MessageLoop(telegram_bot, handle).run_as_thread()
+    time.sleep(20)
+    #if command == '/register':
+    #    telegram_chatid = msg['chat']['id']
+    print "Time is up"
 
