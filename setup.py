@@ -20,6 +20,8 @@ config
 
 """ INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
 
+""" FIX PATHING ISSUES """
+
 config.read("config.ini") #read config file
 config.sections() #getting sections
 
@@ -69,6 +71,8 @@ def telegram_token_configuration():
         cfgfile.close()
         
 # Helper Function to listen to command /register, this will return the chat ID and store it in the config file
+
+""" FIX THIS SHIT """
         
 def get_chatid(msg):
     telegram_chat_id = msg['chat']['id']

@@ -1,13 +1,14 @@
 import time
-#from __future__ import print_function
-#import random
 import datetime
-#from telepot.loop import MessageLoop
-#import config
-import ConfigParser #config parser for loading local settings
 import sys
 import io
+import os
+
+import ConfigParser #config parser for loading local settings
+
 import telepot
+
+
 #from telepot.loop import MessageLoop
 
 #initialising Config parser
@@ -15,6 +16,9 @@ config = ConfigParser.ConfigParser()
 config
 
 """ INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
+
+""" FIX PATHING ISSUES """
+
 
 config.read("config.ini") #read config file
 config.sections() #getting sections
