@@ -16,7 +16,7 @@ config
 
 """ INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
 
-config.read("config.ini") #read config file
+config.read("config.conf") #read config file
 config.sections() #getting sections
 
 print "Config File Contains:" 
@@ -42,8 +42,18 @@ def ConfigSectionMap(section):
 telegram_token = ConfigSectionMap("Telegram")['token']
 telegram_chatid = ConfigSectionMap("Telegram")['chatid']
 #Just some testing of output for debugging
-print "Token is %s. Chatid is %s" % (telegram_token, telegram_chatid)
+#print "Token is %s. Chatid is %s" % (telegram_token, telegram_chatid)
         
-telegrambot = telepot.Bot(telegram_token)
+telegram_bot = telepot.Bot(telegram_token)
 
-telegrambot.sendMessage(telegram_chatid,str(datetime.datetime.now()))
+telegram_bot.sendMessage(telegram_chatid,str(datetime.datetime.now()))
+
+from telepot.loop import MessageLoop
+def handle(msg):
+    command = msg['text']
+    print(msg)
+    print command
+
+MessageLoop(telegram_bot, handle).run_as_thread()
+time.sleep(10)
+print "Time is up"
