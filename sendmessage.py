@@ -3,13 +3,11 @@ import datetime
 import sys
 import io
 import os
-
+import sys
 import ConfigParser #config parser for loading local settings
 
 import telepot
 
-
-#from telepot.loop import MessageLoop
 
 #initialising Config parser
 config = ConfigParser.ConfigParser()
@@ -17,13 +15,13 @@ config
 
 """ INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
 
-""" FIX PATHING ISSUES """
+this_dir, this_filename = os.path.split(__file__)
+CONFIG_PATH = os.path.join(this_dir, "config.conf")
 
-
-config.read("config.ini") #read config file
+config.read(CONFIG_PATH) #read config file
 config.sections() #getting sections
 
-print "Config File Contains:" 
+print "Config File Contains: " 
 print config.sections() #print sections for debug
 
 # Helper function ConfigSectionMap to write a dictionary config_dict1 from config.ini into python

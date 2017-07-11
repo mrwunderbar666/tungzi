@@ -14,6 +14,8 @@ import os
 import io
 import telepot
 from telepot.loop import MessageLoop
+from telegram.ext import Updater as telegram_Updater
+from telegram.ext import CommandHandler as telegram_CommandHandler
 
 #initialising Config parser
 config = ConfigParser.ConfigParser()
@@ -61,28 +63,22 @@ def telegram_token_configuration():
     if len(telegram_token) > 1:
         print "Token is %s." % (telegram_token) 
         #telegram_bot = telepot.Bot(telegram_token)
+        #return telegram_token
         return True #telling us that telegram is configured
     else:
         print 'Telegram Token is not defined'
         telegram_token = raw_input("Please enter your Telegram Token: ")
-        cfgfile = open("config.ini",'w')
+        cfgfile = open(CONFIG_PATH,'w')
         #config.add_section('Telegram')
         config.set('Telegram','token',telegram_token)
-        #Config.set('Person','Age', 50)
         config.write(cfgfile)
         cfgfile.close()
-        
-# Helper Function to listen to command /register, this will return the chat ID and store it in the config file
-        
-def handle(msg):
-    command = msg['text']
-    return command
-    
+        #return telegram_token
+    #return telegram_token   
 
 # main function to check if there is a chatID
 
 def telegram_chatid_configuration():
-    telegram_bot = telepot.Bot(telegram_token)
     telegram_chatid = ConfigSectionMap("Telegram")["chatid"]
     if len(telegram_chatid) > 1:
         print "ChatID is %s." % (telegram_chatid)
@@ -91,15 +87,35 @@ def telegram_chatid_configuration():
         print "ChatID is not set"
         return False
 
-
 telegram_token_configuration()
-if telegram_chatid_configuration() == False:
-    #MessageLoop(telegram_bot, get_chatid).run_as_thread()
-    telegram_bot = telepot.Bot(telegram_token)
-    print('Type /register to your Telegram Bot. I am listening for 20 seconds')
-    MessageLoop(telegram_bot, handle).run_as_thread()
-    time.sleep(20)
-    #if command == '/register':
-    #    telegram_chatid = msg['chat']['id']
-    print "Time is up"
 
+# Helper Function to listen to command /register, this will return the chat ID and store it in the config file
+
+
+def telegram_register(bot, update):
+    bot.send_message(chat_id=update.message.chat_id, text="You have successfully registered")
+    cfgfile = open(CONFIG_PATH,'w')
+    #config.add_section('Telegram')
+    config.set('Telegram','chatid',update.message.chat_id)
+    config.write(cfgfile)
+    cfgfile.close()
+    global register_checker
+    register_checker = False
+    telegram_chatid = update.message.chat_id
+    return register_checker
+
+
+if telegram_chatid_configuration() == False:
+    telegram_token = ConfigSectionMap("Telegram")['token']
+    telegram_updater = telegram_Updater(token=telegram_token)
+    telegram_dispatcher = telegram_updater.dispatcher
+    telegram_register_handler = telegram_CommandHandler('register', telegram_register)
+    telegram_dispatcher.add_handler(telegram_register_handler)
+    register_checker = True
+    print('Type /register to your Telegram Bot')
+    while register_checker:
+        telegram_updater.start_polling()
+    print "You have successfully registered"
+    telegram_updater.stop()
+    print "Telegram is now ready!"
+    
