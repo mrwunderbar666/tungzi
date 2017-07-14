@@ -77,7 +77,6 @@ def ConfigSectionMap(section):
             print("exception on %s!" % option)
             config_dict1[option] = None
     return config_dict1
-    print config_dict1
    
 """ Function to compare User Input with Config Sections, to ensure that selected service is 
     configured
@@ -129,6 +128,19 @@ making sure all requested services are properly configured """
 
 if common.__contains__('telegram') or all_serv == True:
     from services import sendtelegram
+    logger.debug('Sending Message via Telegram. User Input: {} . Configurations in Following lines'.format(usr_input_message))
+    logger.debug('Config File Telegram Token{}' .format(ConfigSectionMap("telegram")['token']))
+    logger.debug('Config File Telgram Chatid {}' .format(ConfigSectionMap("telegram")['chatid']))
     sendtelegram.notification(ConfigSectionMap("telegram")['token'], ConfigSectionMap("telegram")['chatid'], sendtelegram.formatter(usr_input_message))
 
-# Formatting the system argument for telegram
+
+
+if common.__contains__('email') or all_serv == True:
+    from services import sendemail
+    logger.debug('Sending Message via Email. User Input: {} . Configurations in Following lines'.format(usr_input_message))
+    logger.debug('Config File Email SMTP {}' .format(ConfigSectionMap("email")['smtpserver']))
+    logger.debug('Config File Email Port {}' .format(ConfigSectionMap("email")['port']))
+    logger.debug('Config File Email From {}' .format(ConfigSectionMap("email")['from']))
+    logger.debug('Config File Email Password {}' .format(ConfigSectionMap("email")['password']))
+    logger.debug('Config File Email Recipient {}' .format(ConfigSectionMap("email")['recipient']))
+    sendemail.notification(ConfigSectionMap("email")['smtpserver'], ConfigSectionMap("email")['port'], ConfigSectionMap("email")['from'], ConfigSectionMap("email")['password'], ConfigSectionMap("email")['recipient'], usr_input_message)
