@@ -3,32 +3,53 @@ import datetime
 import sys
 import io
 import os
-import sys
 import ConfigParser #config parser for loading local settings
+import argparse
 
-import telepot #telegram support with telepot module
+#import telepot #telegram support with telepot module
 
 import logging #logging module
-import json_log_formatter # we want our logfile to be in json for easy handling with oper apps later
 
 """ Setting up the main pathing """
 this_dir, this_filename = os.path.split(__file__)
+LOGGING_PATH = os.path.join(this_dir, "logfile.log")
+CONFIG_PATH = os.path.join(this_dir, "config.conf")
 
 
 """ Setting up logging
     all messages processed by this script will be stored in a log file for easy review at another place """
 
-formatter = json_log_formatter.JSONFormatter()
-LOGGING_PATH = os.path.join(this_dir, "logfile.log")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
-json_handler = logging.FileHandler(filename=LOGGING_PATH)
 
-json_handler.setFormatter(formatter)
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
-logger = logging.getLogger()
-logger.addHandler(json_handler)
-logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler(LOGGING_PATH)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
+""" Setting System arguments """
+
+parser = argparse.ArgumentParser(description='TungZi Notification Script - BETA')
+parser.add_argument('-t','--telegram', help='Use Telegram for your notification', action='store_true')
+parser.add_argument('-e','--email',help='Use Email for your notification', action='store_true')
+
+opts, usr_input_message = parser.parse_known_args()
+check_opts = vars(opts)
+
+""" Getting usr_input_messagetem arguments """
+
+def check_input_message():
+    if usr_input_message: 
+        print('Your input message is: %s' % usr_input_message)
+        logger.info('System input message: %s' % usr_input_message)
+        return True
+    else: 
+        print ('No message so I am sending a random gif')
+        logger.info('No message so I am sending a random gif')
+        return False
+    
 
 #initialising Config parser
 config = ConfigParser.ConfigParser()
@@ -36,13 +57,11 @@ config
 
 """ INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
 
-CONFIG_PATH = os.path.join(this_dir, "config.conf")
-
 config.read(CONFIG_PATH) #read config file
 config.sections() #getting sections
 
-print "Config File Contains: " 
-print config.sections() #print sections for debug
+#print sections for debug
+logger.debug('Config File Contains: {}' .format(config.sections()))
 
 # Helper function ConfigSectionMap to write a dictionary config_dict1 from config.ini into python
 
@@ -60,27 +79,56 @@ def ConfigSectionMap(section):
     return config_dict1
     print config_dict1
    
-    
-telegram_token = ConfigSectionMap("Telegram")['token']
-telegram_chatid = ConfigSectionMap("Telegram")['chatid']
+""" Function to compare User Input with Config Sections, to ensure that selected service is 
+    configured
+"""
 
-sys_notification = sys.argv[1:] #getting the system arguments from the command line
+common = []
+not_common = []
 
-logger.info(sys_notification) #send the notification directly to the log file
+def config_comparator():
+    for k,v in check_opts.iteritems():
+        if v == True and k in config.sections():
+            common.append(k)
+        else:
+            not_common.append(k)
+    return common and not_common
 
+""" Function to get the options selected by the user 
+"""
+
+def get_options():
+        if any(check_opts.values()) == True:
+            print ('At least one service is selected')
+            logger.debug('At least one service is selected, so let\'s check which one')
+            logger.info('Got following arguments from system input: {}' .format(opts)) #send the system arguments directly to the log file
+            config_comparator()
+            print common
+            #print not_common
+            return True
+        else: 
+            print ('All services are selected')
+            logger.debug('No user input argument, so all services are selected')
+            return False
+
+""" testing validity of function """
+
+check_input_message()
+all_serv = False
+
+if get_options() == False:
+    all_serv = True
+    print ('Yes, I am sending to all')
+else:
+    print ('I am sending to {}' .format(opts))
+
+""" Comparing User Input with config sections, 
+making sure all requested services are properly configured """
+
+
+
+if common.__contains__('telegram') or all_serv == True:
+    from services import sendtelegram
+    sendtelegram.notification(ConfigSectionMap("telegram")['token'], ConfigSectionMap("telegram")['chatid'], sendtelegram.formatter(usr_input_message))
 
 # Formatting the system argument for telegram
-
-telegram_notification = ""
-
-for item in sys_notification:
-    telegram_notification += item
-    telegram_notification += "\n"
-
-#Just some testing of output for debugging
-print "Token is %s. Chatid is %s" % (telegram_token, telegram_chatid)
-print 'Message is: %s' % (telegram_notification)
-        
-telegrambot = telepot.Bot(telegram_token)
-
-telegrambot.sendMessage(telegram_chatid,str(telegram_notification))
