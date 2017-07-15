@@ -1,4 +1,4 @@
-""" Configuration File
+""" Configuration Assistant
 
 """
 
@@ -18,6 +18,7 @@ from telegram.ext import Updater as telegram_Updater
 from telegram.ext import CommandHandler as telegram_CommandHandler
 
 import logging #logging module
+from operator import contains
 
 """ Setting up the main pathing """
 this_dir, this_filename = os.path.split(__file__)
@@ -41,8 +42,6 @@ logger.addHandler(file_handler)
 config = ConfigParser.ConfigParser()
 config
 
-""" INSERT CHECK IF THERE IS ANYTHING IN THE CONFIG.INI AND IF THERE IS ONE AT ALL """
-
 
 config.read(CONFIG_PATH) #read config file
 config.sections() #getting sections
@@ -63,80 +62,97 @@ def ConfigSectionMap(section):
         except:
             logger.debug("exception on %s!" % option)
             config_dict1[option] = None
-    return config_dict1
     logger.debug('Created configuration dictionary: {}' .format(config_dict1))
+    return config_dict1
    
-#Just some testing of output for debugging
-    
-telegram_token = ConfigSectionMap("telegram")['token']
-telegram_chatid = ConfigSectionMap("telegram")['chatid']
-logger.debug("Token is %s. Chatid is %s" % (telegram_token, telegram_chatid))
-email_smtpserver = ConfigSectionMap("Email")['smtpserver']
-logger.debug("Email SMTP Server is: %s" % (email_smtpserver))
+""" Telegram configuration functions """
 
-# Configuration function for telegram
-
-def telegram_token_configuration():
-    telegram_token = ConfigSectionMap("telegram")["token"]
-    if len(telegram_token) > 1:
-        print "Token is currently set to %s." % (telegram_token) 
-        logger.debug("Token is currently set to %s." % (telegram_token))
-        return True #telling us that telegram is configured
-    else:
-        print 'telegram Token is not defined'
-        logger.debug("Telegram Token is not defined")
-        telegram_token = raw_input("Please enter your Telegram Token: ")
-        logger.debug("User Input: %s." % (telegram_token))
-        cfgfile = open(CONFIG_PATH,'w')
-        #config.add_section('Telegram')
-        config.set('telegram','token',telegram_token)
-        config.write(cfgfile)
-        cfgfile.close()
-
-# main function to check if there is a chatID
-
-def telegram_chatid_configuration():
-    telegram_chatid = ConfigSectionMap("telegram")["chatid"]
-    if len(telegram_chatid) > 1:
-        print "The ChatID is currently set to %s." % (telegram_chatid) 
-        logger.debug("The ChatID is currently set to %s." % (telegram_chatid))
-        return True
-    else:
-        print "ChatID is not set"
-        logger.debug("The ChatID is not set")
-        return False
-
-telegram_token_configuration()
-
-# Helper Function to listen to command /register, this will return the chat ID and store it in the config file
-
-
-def telegram_register(bot, update):
-    bot.send_message(chat_id=update.message.chat_id, text="You have successfully registered")
-    logger.debug("Telegram registration successful, got following chatid: %s." % (update.message.chat_id))
+def check_telegram():
+    try: 
+        ConfigSectionMap('telegram')
+        telegram_token = ConfigSectionMap('telegram')['token']
+        telegram_chatid = ConfigSectionMap('telegram')['chatid']
+        update_telegram(telegram_token, telegram_chatid)
+    except Exception:
+        new_telegram()
+        
+def new_telegram():
+    from config import configtelegram
+    telegram_token, telegram_chatid = configtelegram.main()
     cfgfile = open(CONFIG_PATH,'w')
-    config.set('telegram','chatid',update.message.chat_id)
+    config.add_section('telegram')
+    config.set('telegram','token',telegram_token)
+    config.set('telegram','chatid',telegram_chatid)
     config.write(cfgfile)
     cfgfile.close()
-    global register_checker
-    register_checker = False
-    telegram_chatid = update.message.chat_id
-    return register_checker
+    
+def update_telegram(telegram_token, telegram_chatid):
+    from config import configtelegram
+    new_telegram_token, new_telegram_chatid = configtelegram.main(telegram_token, telegram_chatid)
+    cfgfile = open(CONFIG_PATH,'w')
+    config.set('telegram','token',new_telegram_token)
+    config.set('telegram','chatid',new_telegram_chatid)
+    config.write(cfgfile)
+    cfgfile.close()
 
+""" Email configuration functions """
 
-if telegram_chatid_configuration() == False:
-    telegram_token = ConfigSectionMap("telegram")['token']
-    telegram_updater = telegram_Updater(token=telegram_token)
-    telegram_dispatcher = telegram_updater.dispatcher
-    telegram_register_handler = telegram_CommandHandler('register', telegram_register)
-    telegram_dispatcher.add_handler(telegram_register_handler)
-    register_checker = True
-    print('Type /register to your Telegram Bot')
-    logger.debug("Prompting user to register at Telegram Bot")
-    while register_checker:
-        telegram_updater.start_polling()
-    print "You have successfully registered"
-    telegram_updater.stop()
-    print "Telegram is now ready!"
-    logger.debug("Telegram Configuration complete")    
-   
+def check_email():
+    try: 
+        ConfigSectionMap('email')
+        email_smtp = ConfigSectionMap('email')['smtpserver']
+        email_port = ConfigSectionMap('email')['port']
+        email_from = ConfigSectionMap('email')['from']
+        email_password = ConfigSectionMap('email')['password']
+        email_recipient = ConfigSectionMap('email')['recipient']
+        update_email(email_smtp, email_port, email_from, email_password, email_recipient)        
+    except Exception:
+        print('Not found, calling new email function')
+        new_email()
+
+def new_email():
+    from config import configemail
+    email_smtp, email_port, email_from, email_password, email_recipient = configemail.main()
+    cfgfile = open(CONFIG_PATH,'w')
+    config.add_section('email')
+    config.set('email','smtpserver',email_smtp)
+    config.set('email','port',email_port)
+    config.set('email','from',email_from)
+    config.set('email','password',email_password)
+    config.set('email','recipient',email_recipient)
+    config.write(cfgfile)
+    cfgfile.close()
+    
+def update_email(email_smtp, email_port, email_from, email_password, email_recipient):
+    from config import configemail
+    new_email_smtp, new_email_port, new_email_from, new_email_password, new_email_recipient = configemail.main(email_smtp, email_port, email_from, email_password, email_recipient)
+    cfgfile = open(CONFIG_PATH,'w')
+    config.set('email','smtpserver',new_email_smtp)
+    config.set('email','port',new_email_port)
+    config.set('email','from',new_email_from)
+    config.set('email','password',new_email_password)
+    config.set('email','recipient',new_email_recipient)
+    config.write(cfgfile)
+    cfgfile.close()            
+
+def main():
+    
+    welcome_message = "=== Welcome === \nWelcome to the TungZi Notification Configuration assistant \nI help you to configure the services that you need to get instant updates from your device. \n"
+    available_service_msg = "Currently following Services are available:\n - Email\n - Telegram"
+    closing_message = "Configuration complete! \nYou can now send a message by typing 'python sendmessage Test' \nRefer to the online manual for details.\n === Configuration Ends ==="
+    
+    print welcome_message
+    print available_service_msg
+    selection = raw_input('Which services do you want to configure? \n Type the name of the service \n Your selection: ')
+    if 'telegram' in selection.lower():  
+        check_telegram()
+    if 'email' or 'mail' or 'e-mail' in selection.lower():
+        check_email()
+        
+    print closing_message
+
+if __name__ == '__main__':
+    main()
+else:
+    pass
+
