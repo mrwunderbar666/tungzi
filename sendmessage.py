@@ -34,16 +34,20 @@ logger.addHandler(file_handler)
 parser = argparse.ArgumentParser(description='TungZi Notification Script - BETA')
 parser.add_argument('-t','--telegram', help='Use Telegram for your notification', action='store_true')
 parser.add_argument('-e','--email',help='Use Email for your notification', action='store_true')
+parser.add_argument('--queue',help='Add your message to the queue and send it later', action='store_true')
 
 opts, usr_input_message = parser.parse_known_args()
 check_opts = vars(opts)
+print parser.parse_known_args()
+print opts
+print check_opts
 
 """ Getting usr_input_messagetem arguments """
 
 def check_input_message():
     if usr_input_message: 
         print('Your input message is: %s' % usr_input_message)
-        logger.info('System input message: %s' % usr_input_message)
+        logger.info('User input message: %s' % usr_input_message)
         return True
     else: 
         print ('No message so I am sending a random gif')
@@ -93,10 +97,20 @@ def config_comparator():
             not_common.append(k)
     return common and not_common
 
-""" Function to get the options selected by the user 
+""" Functions to get the options selected by the user 
 """
 
-def get_options():
+def check_queue():
+    if opts.queue:
+        import addqueue
+        addqueue.addqueue(usr_input_message)
+        print ('Adding to queue')
+        return True
+    else:
+        print ('not adding to queue')
+        return False
+
+def get_services():
         if any(check_opts.values()) == True:
             print ('At least one service is selected')
             logger.debug('At least one service is selected, so let\'s check which one')
@@ -112,35 +126,39 @@ def get_options():
 
 """ testing validity of function """
 
-check_input_message()
-all_serv = False
-
-if get_options() == False:
-    all_serv = True
-    print ('Yes, I am sending to all')
-else:
-    print ('I am sending to {}' .format(opts))
 
 """ Comparing User Input with config sections, 
 making sure all requested services are properly configured """
 
+def send_now():
+    if common.__contains__('telegram') or all_serv == True:
+        from services import sendtelegram
+        logger.debug('Sending Message via Telegram. User Input: {} . Configurations in Following lines'.format(usr_input_message))
+        logger.debug('Config File Telegram Token{}' .format(ConfigSectionMap("telegram")['token']))
+        logger.debug('Config File Telgram Chatid {}' .format(ConfigSectionMap("telegram")['chatid']))
+        sendtelegram.notification(ConfigSectionMap("telegram")['token'], ConfigSectionMap("telegram")['chatid'], sendtelegram.formatter(usr_input_message))
+    if common.__contains__('email') or all_serv == True:
+        from services import sendemail
+        logger.debug('Sending Message via Email. User Input: {} . Configurations in Following lines'.format(usr_input_message))
+        logger.debug('Config File Email SMTP {}' .format(ConfigSectionMap("email")['smtpserver']))
+        logger.debug('Config File Email Port {}' .format(ConfigSectionMap("email")['port']))
+        logger.debug('Config File Email From {}' .format(ConfigSectionMap("email")['from']))
+        logger.debug('Config File Email Password {}' .format(ConfigSectionMap("email")['password']))
+        logger.debug('Config File Email Recipient {}' .format(ConfigSectionMap("email")['recipient']))
+        sendemail.notification(ConfigSectionMap("email")['smtpserver'], ConfigSectionMap("email")['port'], ConfigSectionMap("email")['from'], ConfigSectionMap("email")['password'], ConfigSectionMap("email")['recipient'], usr_input_message)
+        
+        
+check_input_message()
+all_serv = False
+
+if check_queue() == False:
+    if get_services() == False:
+        all_serv = True
+        print ('Yes, I am sending to all')
+    else:
+        print ('I am sending to {}' .format(opts))
+    send_now()
+else:
+    print ("Added to queue: {}" .format(usr_input_message))
 
 
-if common.__contains__('telegram') or all_serv == True:
-    from services import sendtelegram
-    logger.debug('Sending Message via Telegram. User Input: {} . Configurations in Following lines'.format(usr_input_message))
-    logger.debug('Config File Telegram Token{}' .format(ConfigSectionMap("telegram")['token']))
-    logger.debug('Config File Telgram Chatid {}' .format(ConfigSectionMap("telegram")['chatid']))
-    sendtelegram.notification(ConfigSectionMap("telegram")['token'], ConfigSectionMap("telegram")['chatid'], sendtelegram.formatter(usr_input_message))
-
-
-
-if common.__contains__('email') or all_serv == True:
-    from services import sendemail
-    logger.debug('Sending Message via Email. User Input: {} . Configurations in Following lines'.format(usr_input_message))
-    logger.debug('Config File Email SMTP {}' .format(ConfigSectionMap("email")['smtpserver']))
-    logger.debug('Config File Email Port {}' .format(ConfigSectionMap("email")['port']))
-    logger.debug('Config File Email From {}' .format(ConfigSectionMap("email")['from']))
-    logger.debug('Config File Email Password {}' .format(ConfigSectionMap("email")['password']))
-    logger.debug('Config File Email Recipient {}' .format(ConfigSectionMap("email")['recipient']))
-    sendemail.notification(ConfigSectionMap("email")['smtpserver'], ConfigSectionMap("email")['port'], ConfigSectionMap("email")['from'], ConfigSectionMap("email")['password'], ConfigSectionMap("email")['recipient'], usr_input_message)
