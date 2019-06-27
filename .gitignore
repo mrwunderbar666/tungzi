@@ -11,3 +11,4 @@ bfg*
 queue.json
 queue.txt
 test*
+/config/__pycache__/*

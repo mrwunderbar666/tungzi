@@ -1,6 +1,6 @@
 import telepot
 from telepot.loop import MessageLoop
-from telegram.ext import Updater 
+from telegram.ext import Updater
 from telegram.ext import CommandHandler
 
 def token_checker(token):
@@ -16,23 +16,23 @@ def chatid_checker(chatid):
         return False
 
 def token_set():
-    print 'telegram Token is not defined'
+    print('telegram Token is not defined')
     #logger.debug("Telegram Token is not defined")
-    token = raw_input("Please enter your Telegram Token: ")
+    token = input("Please enter your Telegram Token: ")
     #logger.debug("User Input: %s." % (telegram_token))
     return token
 
 def token_replace(token):
-    print "Token is currently set to: %s." % (token) 
+    print("Token is currently set to: %s." % (token) )
     #logger.debug("Token is currently set to %s." % (telegram_token))
-    confirm = raw_input("Do you want to change the token? [yes/no] \n")
+    confirm = input("Do you want to change the token? [yes/no] \n")
     if confirm == 'yes':
-        token = raw_input('Please Enter your new token: \n')
+        token = input('Please Enter your new token: \n')
         return token
     else:
         return token #telling us that telegram token is configured and should be unchanged
     return token
-    
+
 
 # Helper Function to listen to command /register, this will return the chat ID and return it
 
@@ -58,9 +58,9 @@ def chatid_register(token):
     #logger.debug("Prompting user to register at Telegram Bot")
     while register_checker:
         telegram_updater.start_polling()
-    print "You have successfully registered. \n Please wait..."
+    print ("You have successfully registered. \n Please wait...")
     telegram_updater.stop()
-    print "Telegram is now ready!"
+    print ("Telegram is now ready!")
     global telegram_chatid
     return telegram_chatid
 
@@ -70,7 +70,7 @@ def main(token="", chatid=""):
     #if len(token) < 0 and len(chatid) < 0: #if no token is defined and no chatid, then create through user
         print ("No token and no chatid")
         token = token_set()
-        chatid = chatid_register(token)   
+        chatid = chatid_register(token)
     elif token_checker(token) == True or chatid_checker == True: #if a token or a chatid is defined ask user to change
         token = token_replace(token)
         chatid = chatid_register(token)
