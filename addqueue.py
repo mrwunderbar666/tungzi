@@ -29,10 +29,10 @@ def addqueue(usrinput):
             queue = json.load(f)
             print queue
     try:
-        queue[stampdate].append({'time':stamptime,'message':usrinput})
+        queue[stampdate].append({stamptime:usrinput})
         print ("Current date already in JSON, adding new entry")
     except:
-        new_entry = {stampdate: [{'time':stamptime,'message':usrinput}]}
+        new_entry = {stampdate: [{stamptime:usrinput}]}
         queue.update(new_entry)
         print ("Nothing for today, so I am making a new date entry: {}" .format(new_entry))
     with open(pathing(), 'w') as f:
@@ -44,8 +44,9 @@ def getqueue():
     try:
         with open(pathing(), 'r') as f:
             queue = json.load(f)
-            print ("Success! Queue file containts: {}" .format(queue))
-            print queue
+            print ("Success! Queue file contains: {}" .format(queue))
+            """ Unpack Queue """
+            myprint(queue)
             return queue
     except:
         print ("Cannot find Queue File or queue file is empty.")    
@@ -57,6 +58,13 @@ def clearqueue():
         json.dump({}, f)
     print ("Queue File cleared")
     return True
+
+def myprint(d):
+    for k, v in d.iteritems():
+        if isinstance(v, dict):
+            myprint(v)
+        else:
+            print "{0} : {1}".format(k, v)
     
     
 #print getqueue()
@@ -67,6 +75,10 @@ def clearqueue():
 #addqueue(usrinput)
 #print ("Returning Queue:")
 #print getqueue()
+#import services.sendemail
+#my_queue = getqueue()
+print getqueue()
+#services.sendemail.queue_formatter(my_queue)
 #print clearqueue()
 
 

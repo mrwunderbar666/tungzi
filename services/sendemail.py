@@ -29,5 +29,40 @@ def notification(smtp, port, fromaddr, user_pass,toaddr, usrinput):
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
 
+def queue_formatter(queue):
+    datestamps = []
+    dictlist = []
+    print queue
+    for d in queue.keys():
+        #print d, v
+        datestamps += [str(d)]
+        print d
+    print datestamps
+    #for k,i in datestamps:
+    #    print queue[k][i]
+    print "Items: ", queue.items()
+    print "Datestamps[0]: ", datestamps[0]
+    print 'Queue[datestamps[0]]: ', queue[datestamps[0]]
+    print 'Queue[datestamps[0]][0]: {}', str(queue[datestamps[0]][0])
+    my_string = str(queue[datestamps[0]][0])
+    print 'my_string: ', my_string
+    for key, value in queue.iteritems():
+            temp = [key,value]
+            dictlist.append(temp)
+    print dictlist    
+    print 'another try'
+    myprint(queue)
+    print '---'
+    print "Keys: ", queue.keys()
+    print "Values: ", queue.values()
+
+
+def myprint(d):
+    for k, v in d.iteritems():
+        if isinstance(v, dict):
+            myprint(v)
+        else:
+            print "{0} : {1}".format(k, v)
+
 if __name__ == "__main__":
     pass

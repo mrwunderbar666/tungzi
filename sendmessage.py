@@ -106,6 +106,7 @@ def check_queue():
         addqueue.addqueue(usr_input_message)
         print ('Adding to queue')
         return True
+    #elif opts.sendqueue
     else:
         print ('not adding to queue')
         return False
